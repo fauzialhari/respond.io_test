@@ -7,6 +7,6 @@ describe('FlowView', () => {
     const wrapper = mount(FlowView)
 
     expect(wrapper.get('h1').text()).toBe('Workflow canvas')
-    expect(wrapper.find('[aria-label="Workflow canvas"]').exists()).toBe(true)
+    expect(wrapper.getComponent({ name: 'FlowCanvas' }).exists()).toBe(true)
   })
 })

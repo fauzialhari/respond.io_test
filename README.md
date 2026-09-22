@@ -6,7 +6,7 @@ The project is being built as a focused take-home assignment. It will render a s
 
 ## Tech stack
 
-- Vue 3 with TypeScript and Vite
+- Vue 3 with JavaScript (ES6) and Vite
 - [Vue Flow](https://vueflow.dev/) for the canvas, nodes, edges, and interactions
 - [TanStack Vue Query](https://tanstack.com/query/latest/docs/framework/vue/overview) for payload fetching, caching, and mutations
 - [Pinia](https://pinia.vuejs.org/) for client-only UI state
@@ -29,7 +29,7 @@ Open the local URL printed by Vite. The initial route redirects to `/flow`.
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Start the local development server. |
-| `npm run build` | Run TypeScript checks and create a production build. |
+| `npm run build` | Create a production build. |
 | `npm run preview` | Preview the production build locally. |
 | `npm test` | Run the test suite once. |
 | `npm run test:watch` | Run tests in watch mode. |
@@ -78,15 +78,12 @@ payload.json → local mock service → Vue Query query/mutations → UI
 
 ```text
 src/
-  api/          Query client and payload service functions
-  components/   Reusable UI and custom Vue Flow node components
-  composables/  Query and mutation composables
-  mocks/        Local payload/mock API support
+  api/          Global integrations, including Query Client setup
+  features/
+    flow/       Flow-domain code: service, queries, mapper, types, and components
   router/       Application routes
-  stores/       Pinia stores for UI state
-  types/        Shared TypeScript domain types
-  utils/        Payload adapters and pure helpers
-  views/        Route-level views
+  stores/       Global Pinia UI state, if needed
+  views/        Route-level composition
 tests/
   unit/         Unit and component tests
 ```
@@ -100,7 +97,7 @@ tests/
 
 ## Current progress
 
-- [x] Vue 3 + Vite + TypeScript boilerplate
+- [x] Vue 3 + Vite + JavaScript (ES6) boilerplate
 - [x] Vue Query, Pinia, Vue Router, Vue Flow, and testing setup
 - [x] Query Client defaults
 - [x] Initial flow routes and application shell
