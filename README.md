@@ -22,7 +22,7 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite. The initial route redirects to `/flow`.
+Open the local URL printed by Vite. The workflow canvas is available at `/`.
 
 ### Commands
 
@@ -50,7 +50,7 @@ JSON payload / API
         └── mutations update the query cache
 
  Pinia ───────────────────────► selected node, drawer/modal state, viewport
- Vue Router ──────────────────► /flow and /flow/node/:nodeId
+ Vue Router ──────────────────► / and /node/:nodeId
 ```
 
 ### Responsibility boundaries
@@ -92,8 +92,8 @@ tests/
 
 | Route | Purpose |
 | --- | --- |
-| `/flow` | Display the workflow canvas. |
-| `/flow/node/:nodeId` | Display the canvas with the selected node’s detail drawer open. |
+| `/` | Display the workflow canvas. |
+| `/node/:nodeId` | Display the canvas with the selected node’s detail drawer open. |
 
 ## Current progress
 
