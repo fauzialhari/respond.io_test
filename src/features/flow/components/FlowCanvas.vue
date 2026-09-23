@@ -1,6 +1,14 @@
 <script setup>
-import { computed, markRaw, onBeforeUnmount, onMounted, ref } from "vue";
+import {
+  computed,
+  markRaw,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { storeToRefs } from "pinia";
+import { useRoute, useRouter } from "vue-router";
 import { VueFlow } from "@vue-flow/core";
 import { Background } from "@vue-flow/background";
 import { Controls } from "@vue-flow/controls";
@@ -31,6 +39,8 @@ const {
 } = useWorkflowQuery();
 const flowUi = useFlowUiStore();
 const { selectedNodeId: selectedId, isCreateDialogOpen } = storeToRefs(flowUi);
+const route = useRoute();
+const router = useRouter();
 
 const workspaceElement = ref(null);
 const flowInstance = ref(null);
@@ -89,12 +99,42 @@ const selectedNode = computed(() =>
   nodes.value.find((node) => node.id === selectedId.value),
 );
 
+watch(
+  [() => route.params.nodeId, () => workflow.value],
+  ([nodeId, availableWorkflow]) => {
+    if (!nodeId) {
+      selectedId.value = null;
+      return;
+    }
+
+    if (!availableWorkflow) {
+      return;
+    }
+
+    const node = nodes.value.find(
+      (candidate) => candidate.id === String(nodeId),
+    );
+
+    if (!node || node.data.type === "dateTimeConnector") {
+      router.replace({ name: "flow" });
+      return;
+    }
+
+    selectedId.value = node.id;
+  },
+  { immediate: true },
+);
+
 function selectNode(node) {
   if (node.data?.type === "dateTimeConnector") {
     return;
   }
 
-  selectedId.value = node.id;
+  router.push({ name: "flow-node", params: { nodeId: node.id } });
+}
+
+function closeDetails() {
+  router.push({ name: "flow" });
 }
 
 function handleCreate(input) {
@@ -149,7 +189,7 @@ function handleNodeDelete(id) {
   deleteNode(id, {
     onSuccess: (updatedWorkflow) => {
       flowUi.keepNodePositions(updatedWorkflow.map((node) => node.id));
-      selectedId.value = null;
+      closeDetails();
     },
   });
 }
@@ -245,7 +285,7 @@ onBeforeUnmount(() => {
     <NodeDetailsPanel
       v-if="selectedNode"
       :node="selectedNode"
-      @close="selectedId = null"
+      @close="closeDetails"
       @delete="handleNodeDelete"
       @save="handleNodeSave"
     />
