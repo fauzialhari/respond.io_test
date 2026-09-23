@@ -1,1 +1,7 @@
-// Shared test setup belongs here as the test suite grows.
+class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+globalThis.ResizeObserver = ResizeObserver;
