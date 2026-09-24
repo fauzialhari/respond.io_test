@@ -28,10 +28,7 @@ function confirmDelete() {
   >
     <header>
       <div>
-        <p>NODE DETAILS</p>
-        <h2 id="node-details-title">
-          {{ detailsForm?.name ?? "Conversation opened" }}
-        </h2>
+        <h2 id="node-details-title">NODE DETAILS</h2>
       </div>
       <button type="button" aria-label="Close details" @click="$emit('close')">
         ×
@@ -39,7 +36,11 @@ function confirmDelete() {
     </header>
 
     <div class="detail-body">
-      <label>Title<input v-model="detailsForm.name" /></label>
+      <label
+        >Title<input
+          v-model="detailsForm.name"
+          placeholder="Give name to this step"
+      /></label>
       <label
         >Description<textarea
           v-model="detailsForm.description"
@@ -52,7 +53,11 @@ function confirmDelete() {
     </div>
 
     <footer>
-      <button class="delete-button" type="button" @click="isDeleteDialogOpen = true">
+      <button
+        class="delete-button"
+        type="button"
+        @click="isDeleteDialogOpen = true"
+      >
         Delete node
       </button>
       <button class="save-button" type="button" @click="$emit('save')">

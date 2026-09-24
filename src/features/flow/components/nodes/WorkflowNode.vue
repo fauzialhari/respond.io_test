@@ -18,7 +18,7 @@ const typeMeta = computed(
 const message = computed(
   () => props.data.data.payload?.find((part) => part.type === "text")?.text,
 );
-const displayName = computed(() => props.data.name ?? "Conversation opened");
+const displayName = computed(() => props.data.name ?? props.data.type);
 const displayDescription = computed(() => {
   if (props.data.description?.trim()) {
     return props.data.description;

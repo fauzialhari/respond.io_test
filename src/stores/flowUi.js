@@ -23,7 +23,7 @@ export const useFlowUiStore = defineStore("flow-ui", {
       this.detailsForm = {
         nodeId: String(node.id),
         type: node.type,
-        name: node.name ?? "Conversation opened",
+        name: node.name,
         description: node.description ?? "",
         message: payload.find((part) => part.type === "text")?.text ?? "",
         comment: data.comment ?? "",
