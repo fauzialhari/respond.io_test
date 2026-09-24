@@ -28,6 +28,10 @@ async function addAttachment(event) {
     event.target.value = "";
   }
 }
+
+function removeAttachment(index) {
+  detailsForm.value.attachments.splice(index, 1);
+}
 </script>
 
 <template>
@@ -56,6 +60,14 @@ async function addAttachment(event) {
         class="attachment-tile"
       >
         <img :src="attachment" :alt="`Attachment ${index + 1} preview`" />
+        <button
+          type="button"
+          class="attachment-delete"
+          :aria-label="`Remove attachment ${index + 1}`"
+          @click="removeAttachment(index)"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
       </figure>
     </div>
     <p v-else class="empty-attachments">No attachments uploaded.</p>
@@ -114,6 +126,7 @@ textarea {
   gap: 0.55rem;
 }
 .attachment-tile {
+  position: relative;
   aspect-ratio: 1;
   margin: 0;
   overflow: hidden;
@@ -125,6 +138,29 @@ textarea {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.attachment-delete {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 999px;
+  color: #fff;
+  background: rgb(15 23 42 / 78%);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.attachment-delete:hover {
+  background: #be123c;
+}
+.attachment-delete:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
 }
 .empty-attachments,
 .upload-error {
