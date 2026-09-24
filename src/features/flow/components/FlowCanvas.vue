@@ -16,8 +16,10 @@ import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
 import "@vue-flow/controls/dist/style.css";
 import { useWorkflowQuery } from "../api/flowQueries.js";
+import { queryClient } from "../../../api/queryClient.js";
 import { findNodePosition } from "../utils/findNodePosition.js";
 import { layoutWorkflow } from "../utils/layoutWorkflow.js";
+import { createWorkflowHistory } from "../utils/workflowHistory.js";
 import CreateNodeDialog from "./CreateNodeDialog.vue";
 import NodeDetailsPanel from "./NodeDetailsPanel.vue";
 import BranchNode from "./nodes/BranchNode.vue";
@@ -36,10 +38,16 @@ const {
   isScheduled: isWorkflowSaveScheduled,
   refetch,
   retryWorkflowSave,
+  scheduleWorkflowSave,
   updateWorkflowNodeMutation: updateNode,
 } = useWorkflowQuery();
 const flowUi = useFlowUiStore();
 const { selectedNodeId: selectedId, isCreateDialogOpen } = storeToRefs(flowUi);
+const { canRedo, canUndo, recordChange, redo, undo } = createWorkflowHistory({
+  flowUi,
+  queryClient,
+  scheduleWorkflowSave,
+});
 const route = useRoute();
 const router = useRouter();
 
@@ -152,17 +160,19 @@ function closeDetails() {
 
 function handleCreate(input) {
   const position = getNewNodePosition();
-  const updatedWorkflow = createNode({
-    ...input,
-    position,
-    layoutDirection: layoutDirection.value,
-  });
+  recordChange(() => {
+    const updatedWorkflow = createNode({
+      ...input,
+      position,
+      layoutDirection: layoutDirection.value,
+    });
 
-  flowUi.setNodePosition(
-    updatedWorkflow.at(-1).id,
-    position,
-    layoutDirection.value,
-  );
+    flowUi.setNodePosition(
+      updatedWorkflow.at(-1).id,
+      position,
+      layoutDirection.value,
+    );
+  });
   isCreateDialogOpen.value = false;
 }
 
@@ -185,18 +195,21 @@ function getNewNodePosition() {
 }
 
 function handleNodeDragStop({ node }) {
-  flowUi.setNodePosition(node.id, node.position, layoutDirection.value);
+  recordChange(() => {
+    flowUi.setNodePosition(node.id, node.position, layoutDirection.value);
+  });
 }
 
 function handleNodeSave(payload) {
-  updateNode(payload);
+  recordChange(() => updateNode(payload));
   closeDetails();
 }
 
 function handleNodeDelete(id) {
-  const updatedWorkflow = deleteNode(id);
-
-  flowUi.keepNodePositions(updatedWorkflow.map((node) => node.id));
+  recordChange(() => {
+    const updatedWorkflow = deleteNode(id);
+    flowUi.keepNodePositions(updatedWorkflow.map((node) => node.id));
+  });
   closeDetails();
 }
 
@@ -250,6 +263,14 @@ onBeforeUnmount(() => {
           </template>
           <span v-else-if="isWorkflowSaveScheduled">Unsaved changes.</span>
           <span v-else>Changes are successfully saved.</span>
+        </div>
+        <div class="history-controls" aria-label="Workflow history">
+          <button type="button" :disabled="!canUndo" @click="undo">
+            Undo
+          </button>
+          <button type="button" :disabled="!canRedo" @click="redo">
+            Redo
+          </button>
         </div>
       </div>
       <button
@@ -370,6 +391,25 @@ onBeforeUnmount(() => {
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+}
+.history-controls {
+  display: flex;
+  gap: 0.35rem;
+}
+.history-controls button {
+  border: 1px solid #dce3ec;
+  border-radius: 7px;
+  padding: 0.45rem 0.65rem;
+  color: #4057d6;
+  background: rgb(255 255 255 / 92%);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.history-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 .create-button {
   display: inline-flex;

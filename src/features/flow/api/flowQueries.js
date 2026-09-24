@@ -206,6 +206,7 @@ export function useWorkflowQuery() {
     isMutationPending: autosave.isPending,
     isScheduled: autosave.isScheduled,
     retryWorkflowSave: autosave.retryWorkflowSave,
+    scheduleWorkflowSave: autosave.scheduleWorkflowSave,
     createWorkflowNodeMutation: useWorkflowMutation(createWorkflowNode),
     updateWorkflowNodeMutation: useWorkflowMutation(updateWorkflowNode),
     deleteWorkflowNodeMutation: useWorkflowMutation(deleteWorkflowNode),
