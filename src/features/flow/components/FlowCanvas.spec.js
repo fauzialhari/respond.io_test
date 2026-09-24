@@ -39,11 +39,13 @@ const mutationMocks = vi.hoisted(() => ({
   deleteNode: vi.fn(),
   updateNode: vi.fn(),
   retry: vi.fn(),
+  schedule: vi.fn(),
   isSyncError: false,
   isSyncing: false,
 }));
 
 vi.mock("../api/flowQueries.js", () => ({
+  workflowQueryKey: ["workflow"],
   useWorkflowQuery: () => ({
     data: { value: workflow },
     createWorkflowNodeMutation: mutationMocks.createNode,
@@ -57,6 +59,7 @@ vi.mock("../api/flowQueries.js", () => ({
     isScheduled: false,
     refetch: vi.fn(),
     retryWorkflowSave: mutationMocks.retry,
+    scheduleWorkflowSave: mutationMocks.schedule,
     updateWorkflowNodeMutation: mutationMocks.updateNode,
   }),
 }));
