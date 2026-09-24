@@ -19,6 +19,8 @@ const sourcePosition = computed(() =>
   <article
     class="branch-node"
     :class="`branch-${data.connectorType}`"
+    role="group"
+    tabindex="-1"
     :aria-label="`${label} path`"
   >
     <Handle type="target" :position="targetPosition" />
@@ -37,6 +39,10 @@ const sourcePosition = computed(() =>
   font-weight: 800;
   line-height: 1;
   user-select: none;
+}
+.branch-node:focus-visible {
+  outline: 3px solid #f59e0b;
+  outline-offset: 3px;
 }
 .branch-success {
   color: #2563eb;

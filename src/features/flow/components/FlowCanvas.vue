@@ -57,31 +57,43 @@ const calculatedLayout = computed(() =>
 );
 
 const nodes = computed(() =>
-  (workflow.value ?? []).map((node) => {
-    const id = String(node.id);
-    const savedPosition = flowUi.positionsByNodeId[id];
-    const children = (workflow.value ?? []).filter(
-      (candidate) => String(candidate.parentId) === id,
-    );
+  [...(workflow.value ?? [])]
+    .map((node) => {
+      const id = String(node.id);
+      const savedPosition = flowUi.positionsByNodeId[id];
+      const children = (workflow.value ?? []).filter(
+        (candidate) => String(candidate.parentId) === id,
+      );
 
-    return {
-      id,
-      type: node.type === "dateTimeConnector" ? "branch" : "workflow",
-      position:
-        savedPosition?.layoutDirection === layoutDirection.value
-          ? savedPosition.position
-          : calculatedLayout.value[id],
-      draggable: true,
-      focusable: true,
-      selectable: true,
-      data: {
-        ...node,
+      return {
         id,
-        hasChildren: children.length > 0,
-        layoutDirection: layoutDirection.value,
-      },
-    };
-  }),
+        type: node.type === "dateTimeConnector" ? "branch" : "workflow",
+        position:
+          savedPosition?.layoutDirection === layoutDirection.value
+            ? savedPosition.position
+            : calculatedLayout.value[id],
+        tabPosition: calculatedLayout.value[id] ?? { x: 0, y: 0 },
+        draggable: true,
+        // Branch wrappers remain focusable; workflow buttons own focus.
+        focusable: node.type === "dateTimeConnector",
+        selectable: true,
+        data: {
+          ...node,
+          id,
+          hasChildren: children.length > 0,
+          layoutDirection: layoutDirection.value,
+        },
+      };
+    })
+    .sort((a, b) => {
+      const primary = layoutDirection.value === "TB" ? "y" : "x";
+      const secondary = primary === "x" ? "y" : "x";
+      return (
+        a.tabPosition[primary] - b.tabPosition[primary] ||
+        a.tabPosition[secondary] - b.tabPosition[secondary]
+      );
+    })
+    .map(({ tabPosition, ...node }) => node),
 );
 
 const edges = computed(() =>
@@ -377,6 +389,11 @@ onBeforeUnmount(() => {
 }
 .workflow-canvas {
   height: 100%;
+}
+:deep(.vue-flow__node-branch:focus-visible) {
+  outline: 3px solid #f59e0b;
+  outline-offset: 3px;
+  border-radius: 999px;
 }
 .canvas-state {
   display: grid;
