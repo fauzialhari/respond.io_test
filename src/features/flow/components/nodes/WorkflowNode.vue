@@ -45,10 +45,16 @@ const targetPosition = computed(() =>
 const sourcePosition = computed(() =>
   props.data.layoutDirection === "TB" ? Position.Bottom : Position.Right,
 );
+
 </script>
 
 <template>
-  <article class="workflow-node" :class="`tone-${typeMeta.tone}`">
+  <button
+    type="button"
+    class="workflow-node"
+    :class="`tone-${typeMeta.tone}`"
+    :aria-label="`${displayName}: ${displayDescription}`"
+  >
     <Handle
       v-if="data.parentId !== -1"
       type="target"
@@ -61,7 +67,7 @@ const sourcePosition = computed(() =>
     </div>
 
     <Handle v-if="data.hasChildren" type="source" :position="sourcePosition" />
-  </article>
+  </button>
 </template>
 
 <style scoped>
@@ -76,6 +82,8 @@ const sourcePosition = computed(() =>
   padding: 0.8rem;
   color: #1e293b;
   background: #fff;
+  font: inherit;
+  text-align: left;
   box-shadow: 0 7px 18px rgb(15 23 42 / 8%);
   transition:
     border-color 0.15s,
@@ -84,6 +92,11 @@ const sourcePosition = computed(() =>
 .workflow-node:hover {
   border-color: #7184df;
   box-shadow: 0 10px 24px rgb(42 54 136 / 15%);
+}
+.workflow-node:focus-visible,
+.branch-node:focus-visible {
+  outline: 3px solid #f59e0b;
+  outline-offset: 3px;
 }
 .node-icon {
   display: grid;
