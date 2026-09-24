@@ -7,11 +7,12 @@ const props = defineProps({
 const emit = defineEmits(["close", "create"]);
 
 const dialogElement = ref(null);
+const formElement = ref(null);
+const titleInput = ref(null);
 const selectedType = ref("sendMessage");
 const name = ref("");
 const description = ref("");
-const content = ref("");
-const errors = ref({});
+const isTitleInvalid = ref(false);
 
 watch(
   () => props.open,
@@ -49,19 +50,16 @@ function resetForm() {
   selectedType.value = "sendMessage";
   name.value = "";
   description.value = "";
-  content.value = "";
-  errors.value = {};
+  isTitleInvalid.value = false;
 }
 
 function createData() {
   if (selectedType.value === "sendMessage") {
-    return {
-      payload: content.value ? [{ type: "text", text: content.value }] : [],
-    };
+    return { payload: [] };
   }
 
   if (selectedType.value === "addComment") {
-    return { comment: content.value };
+    return { comment: "" };
   }
 
   if (selectedType.value === "businessHours") {
@@ -72,27 +70,13 @@ function createData() {
     };
   }
 
-  return { comment: content.value };
+  return { comment: "" };
 }
 
 function submit() {
-  const nextErrors = {};
+  isTitleInvalid.value = !titleInput.value?.checkValidity();
 
-  if (!name.value.trim()) {
-    nextErrors.name = "Title is required.";
-  }
-
-  if (!description.value.trim()) {
-    nextErrors.description = "Description is required.";
-  }
-
-  if (selectedType.value !== "businessHours" && !content.value.trim()) {
-    nextErrors.content = `${selectedType.value === "sendMessage" ? "Message" : "Comment"} is required.`;
-  }
-
-  errors.value = nextErrors;
-
-  if (Object.keys(nextErrors).length) {
+  if (!formElement.value?.checkValidity()) {
     return;
   }
 
@@ -106,6 +90,12 @@ function submit() {
   resetForm();
   emit("create", node);
 }
+
+function updateTitleValidity() {
+  if (isTitleInvalid.value) {
+    isTitleInvalid.value = !titleInput.value?.checkValidity();
+  }
+}
 </script>
 
 <template>
@@ -116,7 +106,7 @@ function submit() {
     @cancel.prevent="closeDialog"
     @close="handleNativeClose"
   >
-    <form @submit.prevent="submit">
+    <form ref="formElement" novalidate @submit.prevent="submit">
       <header>
         <div>
           <p>WORKFLOW</p>
@@ -143,38 +133,37 @@ function submit() {
         </label>
 
         <label class="form-group">
-          <span>Title *</span>
+          <span>Title</span>
           <input
+            ref="titleInput"
             v-model="name"
             placeholder="e.g. Follow-up message"
             autocomplete="off"
+            required
+            pattern=".*\S.*"
+            :aria-invalid="isTitleInvalid"
+            :aria-describedby="isTitleInvalid ? 'create-node-title-error' : undefined"
+            @input="updateTitleValidity"
           />
-          <small v-if="errors.name">{{ errors.name }}</small>
+          <small
+            v-if="isTitleInvalid"
+            id="create-node-title-error"
+            class="field-error"
+            role="alert"
+          >
+            Enter a title to continue.
+          </small>
         </label>
 
         <label class="form-group">
-          <span>Description *</span>
+          <span>Description</span>
           <textarea
             v-model="description"
             rows="2"
             placeholder="Describe this node"
           ></textarea>
-          <small v-if="errors.description">{{ errors.description }}</small>
         </label>
 
-        <label v-if="selectedType !== 'businessHours'" class="form-group">
-          <span>{{
-            selectedType === "sendMessage" ? "Message" : "Comment"
-          }}</span>
-          <textarea
-            v-model="content"
-            rows="4"
-            :placeholder="
-              selectedType === 'sendMessage' ? 'Enter message' : 'Enter comment'
-            "
-          ></textarea>
-          <small v-if="errors.content">{{ errors.content }}</small>
-        </label>
       </div>
 
       <footer>
@@ -237,6 +226,10 @@ h2 {
   font-size: 0.74rem;
   font-weight: 750;
 }
+.form-group:has(:required) > span::after {
+  content: " *";
+  color: #c24150;
+}
 input,
 textarea,
 select {
@@ -249,7 +242,11 @@ select {
   font: inherit;
   resize: vertical;
 }
-small {
+input:invalid[aria-invalid="true"] {
+  border-color: #e11d48;
+  background: #fff1f2;
+}
+.field-error {
   color: #be123c;
   font-weight: 650;
 }
