@@ -8,11 +8,9 @@ const emit = defineEmits(["close", "create"]);
 
 const dialogElement = ref(null);
 const formElement = ref(null);
-const titleInput = ref(null);
 const selectedType = ref("sendMessage");
 const name = ref("");
 const description = ref("");
-const isTitleInvalid = ref(false);
 
 watch(
   () => props.open,
@@ -50,7 +48,6 @@ function resetForm() {
   selectedType.value = "sendMessage";
   name.value = "";
   description.value = "";
-  isTitleInvalid.value = false;
 }
 
 function createData() {
@@ -74,8 +71,6 @@ function createData() {
 }
 
 function submit() {
-  isTitleInvalid.value = !titleInput.value?.checkValidity();
-
   if (!formElement.value?.checkValidity()) {
     return;
   }
@@ -91,11 +86,6 @@ function submit() {
   emit("create", node);
 }
 
-function updateTitleValidity() {
-  if (isTitleInvalid.value) {
-    isTitleInvalid.value = !titleInput.value?.checkValidity();
-  }
-}
 </script>
 
 <template>
@@ -135,21 +125,14 @@ function updateTitleValidity() {
         <label class="form-group">
           <span>Title</span>
           <input
-            ref="titleInput"
             v-model="name"
             placeholder="e.g. Follow-up message"
             autocomplete="off"
             required
             pattern=".*\S.*"
-            :aria-invalid="isTitleInvalid"
-            :aria-describedby="isTitleInvalid ? 'create-node-title-error' : undefined"
-            @input="updateTitleValidity"
           />
           <small
-            v-if="isTitleInvalid"
-            id="create-node-title-error"
             class="field-error"
-            role="alert"
           >
             Enter a title to continue.
           </small>
@@ -242,13 +225,17 @@ select {
   font: inherit;
   resize: vertical;
 }
-input:invalid[aria-invalid="true"] {
+.form-group:has(input:user-invalid) input {
   border-color: #e11d48;
   background: #fff1f2;
 }
 .field-error {
+  display: none;
   color: #be123c;
   font-weight: 650;
+}
+.form-group:has(input:user-invalid) .field-error {
+  display: block;
 }
 footer {
   display: flex;

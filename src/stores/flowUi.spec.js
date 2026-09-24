@@ -27,29 +27,23 @@ describe("flowUi store", () => {
     store.setDetailsForm({
       id: "message-1",
       type: "sendMessage",
-      name: "Welcome",
-      data: {
-        payload: [
-          { type: "text", text: "Hello" },
-          { type: "attachment", attachment: "image.jpg" },
-        ],
-      },
+      title: "Welcome",
+      description: "",
+      message: "Hello",
+      attachments: ["image.jpg"],
+      comment: "",
+      timezone: "UTC",
+      times: [],
     });
     store.detailsForm.message = "Updated hello";
 
-    expect(store.getDetailsFormChanges()).toEqual({
+    expect(store.detailsForm).toMatchObject({
       id: "message-1",
-      changes: {
-        name: "Welcome",
-        description: "",
-        data: {
-          payload: [
-            { type: "text", text: "Updated hello" },
-            { type: "attachment", attachment: "image.jpg" },
-          ],
-        },
-      },
+      title: "Welcome",
+      message: "Updated hello",
+      attachments: ["image.jpg"],
     });
+    expect(store).not.toHaveProperty("getDetailsFormChanges");
   });
 
   it("stores node positions separately from workflow data", () => {

@@ -69,6 +69,13 @@ describe("FlowCanvas", () => {
     Object.values(mutationMocks)
       .filter((value) => typeof value === "function")
       .forEach((mock) => mock.mockClear());
+    mutationMocks.createNode.mockImplementation((input) => [
+      ...workflow,
+      { ...input, id: "new-node" },
+    ]);
+    mutationMocks.deleteNode.mockImplementation((id) =>
+      workflow.filter((node) => String(node.id) !== String(id)),
+    );
     mutationMocks.isSyncError = false;
     mutationMocks.isSyncing = false;
   });
@@ -113,19 +120,22 @@ describe("FlowCanvas", () => {
     );
   });
 
-  it("uses the dedicated display-only node type for success and failure branches", async () => {
+  it("keeps success and failure branches draggable but out of node details", async () => {
     const { wrapper } = await mountCanvas();
-    const connector = wrapper
-      .getComponent({ name: "VueFlow" })
-      .props("nodes")
-      .find((node) => node.id === "success");
+    const flow = wrapper.getComponent({ name: "VueFlow" });
+    const connector = flow.props("nodes").find((node) => node.id === "success");
 
     expect(connector).toMatchObject({
       type: "branch",
-      draggable: false,
-      focusable: false,
-      selectable: false,
+      draggable: true,
+      focusable: true,
+      selectable: true,
     });
+
+    flow.vm.$emit("node-click", { node: connector });
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find("node-details-panel-stub").exists()).toBe(false);
   });
 
   it("opens the native create dialog from the create-node control", async () => {
@@ -167,19 +177,23 @@ describe("FlowCanvas", () => {
   });
 
   it("closes node details after saving changes", async () => {
-    mutationMocks.updateNode.mockImplementationOnce((payload, options) => {
-      options.onSuccess(payload);
-    });
     const { router, wrapper } = await mountCanvas("/node/d09c08");
     const payload = { id: "d09c08", changes: { name: "Updated hours" } };
 
     wrapper.findComponent({ name: "NodeDetailsPanel" }).vm.$emit("save", payload);
     await flushPromises();
 
-    expect(mutationMocks.updateNode).toHaveBeenCalledWith(
-      payload,
-      expect.objectContaining({ onSuccess: expect.any(Function) }),
-    );
+    expect(mutationMocks.updateNode).toHaveBeenCalledWith(payload);
+    expect(router.currentRoute.value.fullPath).toBe("/");
+  });
+
+  it("closes node details after deleting without a mutation callback", async () => {
+    const { router, wrapper } = await mountCanvas("/node/d09c08");
+
+    wrapper.findComponent({ name: "NodeDetailsPanel" }).vm.$emit("delete", "d09c08");
+    await flushPromises();
+
+    expect(mutationMocks.deleteNode).toHaveBeenCalledWith("d09c08");
     expect(router.currentRoute.value.fullPath).toBe("/");
   });
 
@@ -217,7 +231,6 @@ describe("FlowCanvas", () => {
         position: { x: 120, y: 120 },
         layoutDirection: "LR",
       }),
-      expect.any(Object),
     );
   });
 });

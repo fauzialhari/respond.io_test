@@ -6,7 +6,7 @@ describe("BranchNode", () => {
   it("renders the success path as a display-only branch label", () => {
     const wrapper = shallowMount(BranchNode, {
       props: {
-        data: { hasChildren: true, data: { connectorType: "success" } },
+        data: { hasChildren: true, connectorType: "success" },
       },
       global: { stubs: { Handle: true } },
     });

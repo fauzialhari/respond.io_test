@@ -53,9 +53,20 @@ describe("flowQueries", () => {
       global: { plugins: [[VueQueryPlugin, { queryClient }]] },
     });
 
+    expect(workflowQuery.data.value[0]).toMatchObject({
+      id: "message",
+      title: "Original",
+      description: "",
+      message: "",
+      attachments: [],
+    });
+
     workflowQuery.updateWorkflowNodeMutation({
       id: "message",
-      changes: { name: "Updated" },
+      title: "Updated",
+      description: "",
+      message: "",
+      attachments: [],
     });
 
     expect(queryClient.getQueryData(workflowQueryKey)).toEqual([
@@ -76,6 +87,7 @@ describe("flowQueries", () => {
             type: "sendMessage",
             name: "Updated",
             data: { payload: [] },
+            description: "",
           },
         ]),
       },
@@ -87,6 +99,7 @@ describe("flowQueries", () => {
         type: "sendMessage",
         name: "Updated",
         data: { payload: [] },
+        description: "",
       },
     ]);
   });
@@ -118,12 +131,18 @@ describe("flowQueries", () => {
 
     workflowQuery.updateWorkflowNodeMutation({
       id: "message",
-      changes: { name: "First edit" },
+      title: "First edit",
+      description: "",
+      message: "",
+      attachments: [],
     });
     await vi.advanceTimersByTimeAsync(WORKFLOW_AUTOSAVE_DELAY - 1);
     workflowQuery.updateWorkflowNodeMutation({
       id: "message",
-      changes: { name: "Final edit" },
+      title: "Final edit",
+      description: "",
+      message: "",
+      attachments: [],
     });
 
     expect(fetch).not.toHaveBeenCalled();
@@ -144,6 +163,7 @@ describe("flowQueries", () => {
             type: "sendMessage",
             name: "Final edit",
             data: { payload: [] },
+            description: "",
           },
         ]),
       }),
@@ -166,14 +186,10 @@ describe("flowQueries", () => {
       { global: { plugins: [[VueQueryPlugin, { queryClient }]] } },
     );
 
-    const onSuccess = vi.fn();
-    workflowQuery.createWorkflowNodeMutation(
-      {
-        name: "Detached note",
-        type: "addComment",
-      },
-      { onSuccess },
-    );
+    const updatedWorkflow = workflowQuery.createWorkflowNodeMutation({
+      name: "Detached note",
+      type: "addComment",
+    });
 
     const createdNode = queryClient.getQueryData(workflowQueryKey).at(-1);
     expect(createdNode).toMatchObject({
@@ -181,9 +197,7 @@ describe("flowQueries", () => {
       type: "addComment",
       name: "Detached note",
     });
-    expect(onSuccess).toHaveBeenCalledWith(
-      queryClient.getQueryData(workflowQueryKey),
-    );
+    expect(updatedWorkflow).toEqual(queryClient.getQueryData(workflowQueryKey));
   });
 
   it("deletes the selected node and every descendant in the Query Client", () => {

@@ -11,7 +11,13 @@ describe("AddCommentDetails", () => {
     store.setDetailsForm({
       id: "comment",
       type: "addComment",
-      data: { comment: "Original comment" },
+      title: "Comment",
+      description: "",
+      message: "",
+      comment: "Original comment",
+      attachments: [],
+      timezone: "UTC",
+      times: [],
     });
     const wrapper = mount(AddCommentDetails, { global: { plugins: [pinia] } });
 

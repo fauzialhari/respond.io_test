@@ -14,29 +14,36 @@ vi.mock("../api/attachmentService.js", () => ({
 const messageNode = {
   data: {
     id: "welcome",
-    name: "Welcome Message",
+    title: "Welcome Message",
+    description: "",
     type: "sendMessage",
-    data: {
-      payload: [
-        { type: "text", text: "Hello there" },
-        { type: "attachment", attachment: "image.jpg" },
-      ],
-    },
+    message: "Hello there",
+    attachments: ["image.jpg"],
+    comment: "",
+    timezone: "UTC",
+    times: [],
   },
 };
 
 const businessHoursNode = {
   data: {
     id: "hours",
-    name: "Business Hours",
+    title: "Business Hours",
+    description: "",
     type: "dateTime",
-    data: {
-      timezone: "UTC",
-      times: [
-        { day: "mon", startTime: "09:00", endTime: "17:00" },
-        { day: "tue", startTime: "10:00", endTime: "18:00" },
-      ],
-    },
+    message: "",
+    attachments: [],
+    comment: "",
+    timezone: "UTC",
+    times: [
+      { day: "mon", startTime: "09:00", endTime: "17:00" },
+      { day: "tue", startTime: "10:00", endTime: "18:00" },
+      { day: "wed", startTime: "", endTime: "" },
+      { day: "thu", startTime: "", endTime: "" },
+      { day: "fri", startTime: "", endTime: "" },
+      { day: "sat", startTime: "", endTime: "" },
+      { day: "sun", startTime: "", endTime: "" },
+    ],
   },
 };
 
@@ -94,7 +101,7 @@ describe("NodeDetailsPanel", () => {
     expect(wrapper.emitted("close")).toHaveLength(1);
   });
 
-  it("emits a Vue Query-compatible update payload from save", async () => {
+  it("emits the minimal UI draft from save", async () => {
     const wrapper = mountPanel(messageNode);
 
     await wrapper.get("input").setValue("Updated title");
@@ -105,12 +112,9 @@ describe("NodeDetailsPanel", () => {
     const payload = wrapper.emitted("save")[0][0];
 
     expect(payload.id).toBe("welcome");
-    expect(payload.changes.name).toBe("Updated title");
-    expect(payload.changes.description).toBe("Updated description");
-    expect(payload.changes.data.payload[0]).toEqual({
-      type: "text",
-      text: "Updated message",
-    });
+    expect(payload.title).toBe("Updated title");
+    expect(payload.description).toBe("Updated description");
+    expect(payload.message).toBe("Updated message");
   });
 
   it("uses native validation for a required, non-blank title", async () => {
@@ -150,10 +154,9 @@ describe("NodeDetailsPanel", () => {
 
     await wrapper.get("form").trigger("submit");
 
-    expect(wrapper.emitted("save")[0][0].changes.data.payload).toContainEqual({
-      type: "attachment",
-      attachment: "https://picsum.photos/seed/new-file/240/160",
-    });
+    expect(wrapper.emitted("save")[0][0].attachments).toContain(
+      "https://picsum.photos/seed/new-file/240/160",
+    );
   });
 
   it("confirms before emitting the selected node ID for deletion", async () => {
@@ -189,7 +192,7 @@ describe("NodeDetailsPanel", () => {
     await timeInputs[0].setValue("08:30");
     await wrapper.get("form").trigger("submit");
 
-    expect(wrapper.emitted("save")[0][0].changes.data.times[0]).toEqual({
+    expect(wrapper.emitted("save")[0][0].times[0]).toEqual({
       day: "mon",
       startTime: "08:30",
       endTime: "17:00",

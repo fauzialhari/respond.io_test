@@ -5,7 +5,7 @@ import { Handle, Position } from "@vue-flow/core";
 const props = defineProps({ data: { type: Object, required: true } });
 
 const label = computed(() =>
-  props.data.data.connectorType === "success" ? "Success" : "Failure",
+  props.data.connectorType === "success" ? "Success" : "Failure",
 );
 const targetPosition = computed(() =>
   props.data.layoutDirection === "TB" ? Position.Top : Position.Left,
@@ -18,7 +18,7 @@ const sourcePosition = computed(() =>
 <template>
   <article
     class="branch-node"
-    :class="`branch-${data.data.connectorType}`"
+    :class="`branch-${data.connectorType}`"
     :aria-label="`${label} path`"
   >
     <Handle type="target" :position="targetPosition" />
