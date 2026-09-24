@@ -166,6 +166,23 @@ describe("FlowCanvas", () => {
     expect(wrapper.find("node-details-panel-stub").exists()).toBe(true);
   });
 
+  it("closes node details after saving changes", async () => {
+    mutationMocks.updateNode.mockImplementationOnce((payload, options) => {
+      options.onSuccess(payload);
+    });
+    const { router, wrapper } = await mountCanvas("/node/d09c08");
+    const payload = { id: "d09c08", changes: { name: "Updated hours" } };
+
+    wrapper.findComponent({ name: "NodeDetailsPanel" }).vm.$emit("save", payload);
+    await flushPromises();
+
+    expect(mutationMocks.updateNode).toHaveBeenCalledWith(
+      payload,
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+    expect(router.currentRoute.value.fullPath).toBe("/");
+  });
+
   it("replaces an invalid node URL with the workflow route", async () => {
     const { replace, router, wrapper } = await mountCanvas(
       "/node/wrong-id",
