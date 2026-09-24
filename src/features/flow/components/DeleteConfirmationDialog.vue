@@ -33,7 +33,7 @@ watch(
     <h2 id="delete-node-title">Delete this node?</h2>
     <p>
       Are you sure you want to delete this node? This will also delete any
-      child nodes and cannot be undone.
+      child nodes.
     </p>
     <div class="confirmation-actions">
       <button type="button" @click="$emit('cancel')">Cancel</button>

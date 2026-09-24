@@ -6,8 +6,11 @@ import { useFlowUiStore } from "../../../stores/flowUi.js";
 
 const emit = defineEmits(["close", "delete", "save"]);
 const dialog = ref(null);
+const formElement = ref(null);
+const titleInput = ref(null);
 const isDeleteDialogOpen = ref(false);
 const { detailsForm } = storeToRefs(useFlowUiStore());
+const isTitleInvalid = ref(false);
 
 onMounted(() => {
   dialog.value?.showModal?.();
@@ -16,6 +19,22 @@ onMounted(() => {
 function confirmDelete() {
   isDeleteDialogOpen.value = false;
   emit("delete");
+}
+
+function saveDetails() {
+  isTitleInvalid.value = !titleInput.value?.checkValidity();
+
+  if (!formElement.value?.checkValidity()) {
+    return;
+  }
+
+  emit("save");
+}
+
+function updateTitleValidity() {
+  if (isTitleInvalid.value) {
+    isTitleInvalid.value = !titleInput.value?.checkValidity();
+  }
 }
 </script>
 
@@ -35,35 +54,54 @@ function confirmDelete() {
       </button>
     </header>
 
-    <div class="detail-body">
-      <label
-        >Title<input
+    <form ref="formElement" class="detail-form" novalidate @submit.prevent="saveDetails">
+      <div class="detail-body">
+      <label class="detail-field">
+        <span>Title</span>
+        <input
+          ref="titleInput"
           v-model="detailsForm.name"
           placeholder="Give name to this step"
-      /></label>
-      <label
-        >Description<textarea
+          required
+          pattern=".*\S.*"
+          :aria-invalid="isTitleInvalid"
+          :aria-describedby="isTitleInvalid ? 'node-title-error' : undefined"
+          @input="updateTitleValidity"
+        />
+        <small
+          v-if="isTitleInvalid"
+          id="node-title-error"
+          class="field-error"
+          role="alert"
+        >
+          Enter a title to continue.
+        </small>
+      </label>
+      <label class="detail-field">
+        <span>Description</span>
+        <textarea
           v-model="detailsForm.description"
           rows="3"
           placeholder="Describe this step"
         ></textarea>
       </label>
-      <label>Type<input :value="detailsForm.type" readonly /></label>
+      <label class="detail-field">
+        <span>Type</span><input :value="detailsForm.type" readonly />
+      </label>
       <slot name="content" />
-    </div>
+      </div>
 
-    <footer>
-      <button
-        class="delete-button"
-        type="button"
-        @click="isDeleteDialogOpen = true"
-      >
-        Delete node
-      </button>
-      <button class="save-button" type="button" @click="$emit('save')">
-        Save changes
-      </button>
-    </footer>
+      <footer>
+        <button
+          class="delete-button"
+          type="button"
+          @click="isDeleteDialogOpen = true"
+        >
+          Delete node
+        </button>
+        <button class="save-button" type="submit">Save changes</button>
+      </footer>
+    </form>
   </dialog>
 
   <DeleteConfirmationDialog
@@ -123,16 +161,29 @@ header button {
 }
 .detail-body {
   display: grid;
+  min-height: 0;
+  flex: 1;
+  align-content: start;
   gap: 1rem;
   padding: 1.25rem;
   overflow-y: auto;
 }
-label {
+.detail-form {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+.detail-field {
   display: grid;
   gap: 0.42rem;
   color: #475569;
   font-size: 0.72rem;
   font-weight: 750;
+}
+.detail-field:has(:required) > span::after {
+  content: " *";
+  color: #c24150;
 }
 input,
 textarea {
@@ -143,6 +194,14 @@ textarea {
   color: #334155;
   background: #f8fafc;
   resize: none;
+}
+input:invalid[aria-invalid="true"] {
+  border-color: #e11d48;
+  background: #fff1f2;
+}
+.field-error {
+  color: #be123c;
+  font-weight: 650;
 }
 footer {
   display: flex;

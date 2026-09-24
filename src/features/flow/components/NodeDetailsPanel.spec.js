@@ -78,7 +78,7 @@ describe("NodeDetailsPanel", () => {
   it("renders node-specific message and attachment details", () => {
     const wrapper = mountPanel(messageNode);
 
-    expect(wrapper.get("h2").text()).toBe("Welcome Message");
+    expect(wrapper.get("h2").text()).toBe("NODE DETAILS");
     expect(wrapper.get("label").text()).toContain("Title");
     expect(wrapper.findAll("textarea")[0].element.value).toBe("");
     expect(wrapper.findAll("textarea")[1].element.value).toBe("Hello there");
@@ -100,7 +100,7 @@ describe("NodeDetailsPanel", () => {
     await wrapper.get("input").setValue("Updated title");
     await wrapper.findAll("textarea")[0].setValue("Updated description");
     await wrapper.findAll("textarea")[1].setValue("Updated message");
-    await wrapper.get(".save-button").trigger("click");
+    await wrapper.get("form").trigger("submit");
 
     const payload = wrapper.emitted("save")[0][0];
 
@@ -111,6 +111,21 @@ describe("NodeDetailsPanel", () => {
       type: "text",
       text: "Updated message",
     });
+  });
+
+  it("uses native validation for a required, non-blank title", async () => {
+    const wrapper = mountPanel(messageNode);
+
+    await wrapper.get("input").setValue("   ");
+
+    expect(wrapper.get("input").attributes("required")).toBeDefined();
+    expect(wrapper.get("input").element.validity.valid).toBe(false);
+    await wrapper.get("form").trigger("submit");
+
+    expect(wrapper.emitted("save")).toBeUndefined();
+    expect(wrapper.get(".field-error").text()).toBe(
+      "Enter a title to continue.",
+    );
   });
 
   it("uploads a new attachment preview and includes it in the saved payload", async () => {
@@ -133,7 +148,7 @@ describe("NodeDetailsPanel", () => {
     );
     expect(wrapper.findAll(".attachment-tile")).toHaveLength(2);
 
-    await wrapper.get(".save-button").trigger("click");
+    await wrapper.get("form").trigger("submit");
 
     expect(wrapper.emitted("save")[0][0].changes.data.payload).toContainEqual({
       type: "attachment",
@@ -172,7 +187,7 @@ describe("NodeDetailsPanel", () => {
     expect(timeInputs[2].element.value).toBe("10:00");
 
     await timeInputs[0].setValue("08:30");
-    await wrapper.get(".save-button").trigger("click");
+    await wrapper.get("form").trigger("submit");
 
     expect(wrapper.emitted("save")[0][0].changes.data.times[0]).toEqual({
       day: "mon",
