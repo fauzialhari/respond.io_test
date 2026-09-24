@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from "pinia";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { useFlowUiStore } from "./flowUi.js";
 
 describe("flowUi store", () => {
@@ -12,26 +12,44 @@ describe("flowUi store", () => {
 
     store.selectedNodeId = "message-1";
     store.isCreateDialogOpen = true;
-    store.setSyncStatus("syncing");
 
     expect(store.$state).toEqual({
       selectedNodeId: "message-1",
       isCreateDialogOpen: true,
-      syncStatus: "syncing",
       positionsByNodeId: {},
+      detailsForm: null,
     });
   });
 
-  it("retries the latest failed workflow save without storing its callback in state", () => {
-    const retry = vi.fn();
+  it("stores a node detail draft separately from the workflow query data", () => {
     const store = useFlowUiStore();
 
-    store.setSyncStatus("error", retry);
-    store.retry();
+    store.setDetailsForm({
+      id: "message-1",
+      type: "sendMessage",
+      name: "Welcome",
+      data: {
+        payload: [
+          { type: "text", text: "Hello" },
+          { type: "attachment", attachment: "image.jpg" },
+        ],
+      },
+    });
+    store.detailsForm.message = "Updated hello";
 
-    expect(store.syncStatus).toBe("error");
-    expect(retry).toHaveBeenCalledOnce();
-    expect(store.$state).not.toHaveProperty("retrySave");
+    expect(store.getDetailsFormChanges()).toEqual({
+      id: "message-1",
+      changes: {
+        name: "Welcome",
+        description: "",
+        data: {
+          payload: [
+            { type: "text", text: "Updated hello" },
+            { type: "attachment", attachment: "image.jpg" },
+          ],
+        },
+      },
+    });
   });
 
   it("stores node positions separately from workflow data", () => {

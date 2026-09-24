@@ -182,7 +182,7 @@ function handleNodeDragStop({ node }) {
 }
 
 function handleNodeSave(payload) {
-  updateNode(payload);
+  updateNode(payload, { onSuccess: closeDetails });
 }
 
 function handleNodeDelete(id) {

@@ -1,8 +1,11 @@
 import { mount } from "@vue/test-utils";
-import { describe, expect, it, vi } from "vitest";
+import { createPinia } from "pinia";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import NodeDetailsPanel from "./NodeDetailsPanel.vue";
 
 const uploadAttachmentMock = vi.hoisted(() => vi.fn());
+const originalShowModal = HTMLDialogElement.prototype.showModal;
+let showModal;
 
 vi.mock("../api/attachmentService.js", () => ({
   uploadAttachment: uploadAttachmentMock,
@@ -38,8 +41,42 @@ const businessHoursNode = {
 };
 
 describe("NodeDetailsPanel", () => {
+  function mountPanel(node) {
+    return mount(NodeDetailsPanel, {
+      props: { node },
+      global: { plugins: [createPinia()] },
+    });
+  }
+
+  beforeEach(() => {
+    showModal = vi.fn(function openModal() {
+      this.open = true;
+    });
+    HTMLDialogElement.prototype.showModal = showModal;
+  });
+
+  afterEach(() => {
+    if (originalShowModal) {
+      HTMLDialogElement.prototype.showModal = originalShowModal;
+    } else {
+      delete HTMLDialogElement.prototype.showModal;
+    }
+  });
+
+  it("opens as a native modal dialog and closes on Escape", async () => {
+    const wrapper = mountPanel(messageNode);
+    const dialog = wrapper.get("dialog");
+
+    expect(showModal).toHaveBeenCalledOnce();
+    expect(dialog.element.open).toBe(true);
+
+    await dialog.trigger("cancel");
+
+    expect(wrapper.emitted("close")).toHaveLength(1);
+  });
+
   it("renders node-specific message and attachment details", () => {
-    const wrapper = mount(NodeDetailsPanel, { props: { node: messageNode } });
+    const wrapper = mountPanel(messageNode);
 
     expect(wrapper.get("h2").text()).toBe("Welcome Message");
     expect(wrapper.get("label").text()).toContain("Title");
@@ -50,7 +87,7 @@ describe("NodeDetailsPanel", () => {
   });
 
   it("emits close from the close control", async () => {
-    const wrapper = mount(NodeDetailsPanel, { props: { node: messageNode } });
+    const wrapper = mountPanel(messageNode);
 
     await wrapper.get('[aria-label="Close details"]').trigger("click");
 
@@ -58,7 +95,7 @@ describe("NodeDetailsPanel", () => {
   });
 
   it("emits a Vue Query-compatible update payload from save", async () => {
-    const wrapper = mount(NodeDetailsPanel, { props: { node: messageNode } });
+    const wrapper = mountPanel(messageNode);
 
     await wrapper.get("input").setValue("Updated title");
     await wrapper.findAll("textarea")[0].setValue("Updated description");
@@ -80,7 +117,7 @@ describe("NodeDetailsPanel", () => {
     uploadAttachmentMock.mockResolvedValueOnce(
       "https://picsum.photos/seed/new-file/240/160",
     );
-    const wrapper = mount(NodeDetailsPanel, { props: { node: messageNode } });
+    const wrapper = mountPanel(messageNode);
     const input = wrapper.get('input[type="file"]');
 
     Object.defineProperty(input.element, "files", {
@@ -104,18 +141,30 @@ describe("NodeDetailsPanel", () => {
     });
   });
 
-  it("emits the selected node ID from delete", async () => {
-    const wrapper = mount(NodeDetailsPanel, { props: { node: messageNode } });
+  it("confirms before emitting the selected node ID for deletion", async () => {
+    const wrapper = mountPanel(messageNode);
 
     await wrapper.get(".delete-button").trigger("click");
+
+    expect(wrapper.get(".delete-confirmation").element.open).toBe(true);
+    expect(wrapper.emitted("delete")).toBeUndefined();
+
+    await wrapper.get(".confirm-delete-button").trigger("click");
 
     expect(wrapper.emitted("delete")[0]).toEqual(["welcome"]);
   });
 
+  it("does not delete when the confirmation is cancelled", async () => {
+    const wrapper = mountPanel(messageNode);
+
+    await wrapper.get(".delete-button").trigger("click");
+    await wrapper.get(".confirmation-actions button").trigger("click");
+
+    expect(wrapper.emitted("delete")).toBeUndefined();
+  });
+
   it("renders seven editable business-hour rows and saves their time values", async () => {
-    const wrapper = mount(NodeDetailsPanel, {
-      props: { node: businessHoursNode },
-    });
+    const wrapper = mountPanel(businessHoursNode);
     const timeInputs = wrapper.findAll('input[type="time"]');
 
     expect(timeInputs).toHaveLength(14);
