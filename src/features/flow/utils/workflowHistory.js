@@ -3,7 +3,7 @@ import { workflowQueryKey } from "../api/flowQueries.js";
 
 export const MAX_WORKFLOW_HISTORY_SNAPSHOTS = 50;
 
-function clone(value) {
+function cloneSnapshot(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
@@ -25,8 +25,8 @@ export function createWorkflowHistory({
 
   function takeSnapshot() {
     return {
-      workflow: clone(queryClient.getQueryData(workflowQueryKey) ?? []),
-      positions: clone(flowUi.positionsByNodeId),
+      workflow: cloneSnapshot(queryClient.getQueryData(workflowQueryKey) ?? []),
+      positions: cloneSnapshot(flowUi.positionsByNodeId),
     };
   }
 
@@ -35,8 +35,11 @@ export function createWorkflowHistory({
     const workflowChanged =
       JSON.stringify(currentWorkflow) !== JSON.stringify(snapshot.workflow);
 
-    queryClient.setQueryData(workflowQueryKey, clone(snapshot.workflow));
-    flowUi.replaceNodePositions(clone(snapshot.positions));
+    queryClient.setQueryData(
+      workflowQueryKey,
+      cloneSnapshot(snapshot.workflow),
+    );
+    flowUi.replaceNodePositions(cloneSnapshot(snapshot.positions));
 
     if (workflowChanged) {
       scheduleWorkflowSave();
