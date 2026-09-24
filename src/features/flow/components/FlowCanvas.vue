@@ -217,9 +217,45 @@ function updateLayoutDirection({ width, height }) {
   layoutDirection.value = width >= height ? "LR" : "TB";
 }
 
+function getHistoryShortcut(event) {
+  if (
+    event.isComposing ||
+    (!event.ctrlKey && !event.metaKey) ||
+    event.altKey ||
+    event.target?.closest?.("input, textarea, select, [contenteditable='true']")
+  ) {
+    return null;
+  }
+
+  const key = event.key.toLowerCase();
+  if (key === "z") {
+    return event.shiftKey ? "redo" : "undo";
+  }
+
+  return key === "y" ? "redo" : null;
+}
+
+function handleHistoryShortcut(event) {
+  const action = getHistoryShortcut(event);
+
+  if (
+    !action ||
+    (action === "undo" && !canUndo.value) ||
+    (action === "redo" && !canRedo.value)
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  if (action === "undo") undo();
+  if (action === "redo") redo();
+}
+
 let resizeObserver;
 
 onMounted(() => {
+  window.addEventListener("keydown", handleHistoryShortcut);
+
   if (!workspaceElement.value || typeof ResizeObserver === "undefined") {
     return;
   }
@@ -232,6 +268,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener("keydown", handleHistoryShortcut);
   resizeObserver?.disconnect();
 });
 </script>
