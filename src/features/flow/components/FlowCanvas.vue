@@ -14,6 +14,7 @@ import { Background } from "@vue-flow/background";
 import { Controls } from "@vue-flow/controls";
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
+import "@vue-flow/controls/dist/style.css";
 import { useWorkflowQuery } from "../api/flowQueries.js";
 import { findNodePosition } from "../utils/findNodePosition.js";
 import { layoutWorkflow } from "../utils/layoutWorkflow.js";
