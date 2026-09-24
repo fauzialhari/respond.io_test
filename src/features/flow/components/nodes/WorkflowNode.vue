@@ -15,25 +15,22 @@ const typeMeta = computed(
     })[props.data.type] ?? { icon: "○", tone: "blue" },
 );
 
-const message = computed(
-  () => props.data.data.payload?.find((part) => part.type === "text")?.text,
-);
-const displayName = computed(() => props.data.name ?? props.data.type);
+const displayName = computed(() => props.data.title ?? props.data.type);
 const displayDescription = computed(() => {
   if (props.data.description?.trim()) {
     return props.data.description;
   }
 
-  if (message.value) {
-    return message.value;
+  if (props.data.message) {
+    return props.data.message;
   }
 
-  if (props.data.data.comment) {
-    return props.data.data.comment;
+  if (props.data.comment) {
+    return props.data.comment;
   }
 
   if (["dateTime", "businessHours"].includes(props.data.type)) {
-    return `Business hours · ${props.data.data.timezone ?? "UTC"}`;
+    return `Business hours · ${props.data.timezone}`;
   }
 
   if (props.data.type === "trigger") {

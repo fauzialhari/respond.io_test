@@ -13,8 +13,8 @@ describe('WorkflowNode', () => {
       parentId: 'parent',
       hasChildren: false,
       type: 'sendMessage',
-      name: 'Welcome Message',
-      data: { payload: [{ type: 'text', text: 'Welcome aboard' }, { type: 'attachment', attachment: 'image.jpg' }] },
+      title: 'Welcome Message',
+      message: 'Welcome aboard',
     })
 
     expect(wrapper.find('.node-icon').text()).toBe('✉')
@@ -28,9 +28,9 @@ describe('WorkflowNode', () => {
       parentId: 'parent',
       hasChildren: false,
       type: 'addComment',
-      name: 'Internal note',
+      title: 'Internal note',
       description: 'A short node summary',
-      data: { comment: 'This is not shown when a description exists' },
+      comment: 'This is not shown when a description exists',
     })
 
     expect(wrapper.find('.node-copy p').text()).toBe('A short node summary')

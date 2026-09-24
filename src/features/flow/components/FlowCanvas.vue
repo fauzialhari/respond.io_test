@@ -71,9 +71,9 @@ const nodes = computed(() =>
         savedPosition?.layoutDirection === layoutDirection.value
           ? savedPosition.position
           : calculatedLayout.value[id],
-      draggable: node.type !== "dateTimeConnector",
-      focusable: node.type !== "dateTimeConnector",
-      selectable: node.type !== "dateTimeConnector",
+      draggable: true,
+      focusable: true,
+      selectable: true,
       data: {
         ...node,
         id,
@@ -139,24 +139,18 @@ function closeDetails() {
 
 function handleCreate(input) {
   const position = getNewNodePosition();
+  const updatedWorkflow = createNode({
+    ...input,
+    position,
+    layoutDirection: layoutDirection.value,
+  });
 
-  createNode(
-    {
-      ...input,
-      position,
-      layoutDirection: layoutDirection.value,
-    },
-    {
-      onSuccess: (updatedWorkflow) => {
-        flowUi.setNodePosition(
-          updatedWorkflow.at(-1).id,
-          position,
-          layoutDirection.value,
-        );
-        isCreateDialogOpen.value = false;
-      },
-    },
+  flowUi.setNodePosition(
+    updatedWorkflow.at(-1).id,
+    position,
+    layoutDirection.value,
   );
+  isCreateDialogOpen.value = false;
 }
 
 function getNewNodePosition() {
@@ -182,16 +176,15 @@ function handleNodeDragStop({ node }) {
 }
 
 function handleNodeSave(payload) {
-  updateNode(payload, { onSuccess: closeDetails });
+  updateNode(payload);
+  closeDetails();
 }
 
 function handleNodeDelete(id) {
-  deleteNode(id, {
-    onSuccess: (updatedWorkflow) => {
-      flowUi.keepNodePositions(updatedWorkflow.map((node) => node.id));
-      closeDetails();
-    },
-  });
+  const updatedWorkflow = deleteNode(id);
+
+  flowUi.keepNodePositions(updatedWorkflow.map((node) => node.id));
+  closeDetails();
 }
 
 function updateLayoutDirection({ width, height }) {

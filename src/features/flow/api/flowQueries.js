@@ -4,6 +4,35 @@ import { getWorkflow, postWorkflowMutation } from "./flowService.js";
 
 export const workflowQueryKey = ["workflow"];
 export const WORKFLOW_AUTOSAVE_DELAY = 10_000;
+const businessDays = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+function toWorkflowUi(workflow) {
+  return workflow.map(({ data = {}, name, description, ...node }) => {
+    const payload = data.payload ?? [];
+
+    return {
+      ...node,
+      title: name,
+      description: description ?? "",
+      message: payload.find((part) => part.type === "text")?.text ?? "",
+      attachments: payload
+        .filter((part) => part.type === "attachment")
+        .map((part) => part.attachment),
+      comment: data.comment ?? "",
+      timezone: data.timezone ?? "UTC",
+      times: businessDays.map((day) => {
+        const time = data.times?.find((item) => item.day === day);
+
+        return {
+          day,
+          startTime: time?.startTime ?? "",
+          endTime: time?.endTime ?? "",
+        };
+      }),
+      connectorType: data.connectorType,
+    };
+  });
+}
 
 function createWorkflowNode(workflow, input) {
   return [
@@ -19,16 +48,44 @@ function createWorkflowNode(workflow, input) {
   ];
 }
 
-function updateWorkflowNode(workflow, { id, changes }) {
-  return workflow.map((node) =>
-    String(node.id) !== String(id)
-      ? node
-      : {
-          ...node,
-          ...changes,
-          data: changes.data ? { ...node.data, ...changes.data } : node.data,
-        },
-  );
+function updateWorkflowNode(workflow, draft) {
+  return workflow.map((node) => {
+    if (String(node.id) !== String(draft.id)) {
+      return node;
+    }
+
+    const data = { ...node.data };
+
+    if (node.type === "sendMessage") {
+      data.payload = [
+        ...(draft.message ? [{ type: "text", text: draft.message }] : []),
+        ...draft.attachments.map((attachment) => ({
+          type: "attachment",
+          attachment,
+        })),
+      ];
+    }
+
+    if (node.type === "addComment") {
+      data.comment = draft.comment;
+    }
+
+    if (["dateTime", "businessHours"].includes(node.type)) {
+      data.timezone = draft.timezone;
+      data.times = draft.times.map(({ day, startTime, endTime }) => ({
+        day,
+        startTime,
+        endTime,
+      }));
+    }
+
+    return {
+      ...node,
+      name: draft.title,
+      description: draft.description,
+      data,
+    };
+  });
 }
 
 function deleteWorkflowNode(workflow, id) {
@@ -122,13 +179,14 @@ export function useWorkflowQuery() {
   const query = useQuery({
     queryKey: workflowQueryKey,
     queryFn: getWorkflow,
+    select: toWorkflowUi,
   });
   const autosave = useWorkflowAutosave();
 
   function useWorkflowMutation(applyChange) {
     const queryClient = useQueryClient();
 
-    return (input, options) => {
+    return (input) => {
       const workflow = queryClient.getQueryData(workflowQueryKey);
 
       if (!workflow) {
@@ -137,8 +195,8 @@ export function useWorkflowQuery() {
 
       const updatedWorkflow = applyChange(workflow, input);
       queryClient.setQueryData(workflowQueryKey, updatedWorkflow);
-      options?.onSuccess?.(updatedWorkflow);
       autosave.scheduleWorkflowSave();
+      return updatedWorkflow;
     };
   }
 

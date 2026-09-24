@@ -11,7 +11,13 @@ describe("BusinessHoursDetails", () => {
     store.setDetailsForm({
       id: "hours",
       type: "businessHours",
-      data: { times: [{ day: "mon", startTime: "09:00", endTime: "17:00" }] },
+      title: "Hours",
+      description: "",
+      message: "",
+      comment: "",
+      attachments: [],
+      timezone: "UTC",
+      times: [{ day: "mon", startTime: "09:00", endTime: "17:00" }],
     });
     const wrapper = mount(BusinessHoursDetails, {
       global: { plugins: [pinia] },
